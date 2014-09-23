@@ -57,7 +57,7 @@ In a very quick and simplified way, everything should be connected like this:
 		     A4  ->  SDA
 		     A5  ->  SCL
 
-- Connect the Bluetooth to Serial Port Module (of course, it will depend on the board you choose to use):
+5) Connect the Bluetooth to Serial Port Module (of course, it will depend on the board you choose to use):
 	 
 		           Arduino      Tato's Bluetooth board
 		           -----------------------------------
@@ -66,7 +66,7 @@ In a very quick and simplified way, everything should be connected like this:
 		Digital pin 0 (Rx)  ->  Tx
 		Digital pin 1 (Tx)  ->  Rx
 	 
-- Connect the 3.5mm female audio jacks for the input buttons to the Arduino digital input pins:
+6) Connect the 3.5mm female audio jacks for the input buttons to the Arduino digital input pins:
 
 		      Arduino      Female jack 
 		      ------------------------
@@ -77,7 +77,7 @@ In a very quick and simplified way, everything should be connected like this:
 		          GND  ->  the sleeve of all other tips of all the above jacks
 		           5V  ->  the middle ring of the above jacks
 	 
-- External buttons:
+7) External buttons:
 
 		Hook the male audio jacks to each one of the buttons you choose to use so you can
 		plug them into the female jacks above.
