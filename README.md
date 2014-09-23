@@ -1,7 +1,9 @@
 aCap
 ====
 
-An eletronic cap based on the LilyPad Arduino for detecting and transmitting head movements to emulate a computer mouse (and do some other stuff ;-).
+An electronic cap based on the LilyPad Arduino for detecting and transmitting head movements to emulate a computer mouse (and do some other stuff ;-).
+
+aCap was originally developed to be used as an assistive technology device for people with severe physical disabilities, like tetraplegia.
 
 Hardware
 --------
