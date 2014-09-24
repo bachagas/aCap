@@ -1,5 +1,5 @@
 /*
-   a-Cap - an eletronic Cap based on the LilyPad Arduino for detecting and transmitting head movements to emulate a mouse
+   a-Cap - an electronic cap based on the LilyPad Arduino for detecting and transmitting head movements to emulate a mouse (and do some other stuff ;-)
    Standard PS/2 mouse protocol based on: http://www.computer-engineering.org/ps2mouse/ 
    Typical mouse:
      Sample Rate = 100 samples/sec
@@ -36,7 +36,7 @@ int speakerPin = 13;
 
 // Inputs variables:
 int xValue,yValue,zValue,xRef,yRef,zRef,xDelta,yDelta,zDelta,x,y,z = 0;  // variables to store the values coming from the sensors and calculate displacements in the (x,y) axis
-boolean btn1,btn2,btn3,btn4,btnPressed,oldBtnPressed = false;
+boolean btn1,btn2,btn3,btn4 = false;
 
 // Sensor signal filter parameters:
 /* The accelerometer raw delta will range from 0..128 quids (128 = ~90º - empirical)
@@ -45,20 +45,21 @@ boolean btn1,btn2,btn3,btn4,btnPressed,oldBtnPressed = false;
    0 (stable processes) <-- 50 (mid changing) --> 128 (fast changing)
    * sensor noise r:
    1 (little noise) <-- 50 (moderate) --> 128 (very much noise)
-   * estimation error p is not very important since it is adjusted (down)
-     during the process. It must be just high enough to narrow down.
-     We will initialize it with the middle value of 512
+   * estimation error p is not very important since it is adjusted during the process.
 */
 //sugested initial values from: http://interactive-matter.eu/blog/2009/12/18/filtering-sensor-data-with-a-kalman-filter/
-Kalman xFilter(0.125, 32, 100, 0);
-Kalman yFilter(0.125, 32, 100, 0);
-Kalman zFilter(0.125, 32, 100, 0);
+Kalman xFilter(0.125, 32, 0, 0);
+Kalman yFilter(0.125, 32, 0, 0);
+Kalman zFilter(0.125, 32, 0, 0);
 
 // Control parameters: - TO BE REVIEWED / CLEANED
-boolean active, oldActive = false;
-int attenuation = 1; // will regulate the filter parameters: the greater the value, more sensible to the accelerometer raw inputs
-int sensitivity = 1; // counts/quid - ?
-int tolerance = 10; //for the sensitivity changes 10/1000 = 1%
+boolean active, wasActive = false;
+int btnsPressed, oldBtnsPressed;
+int attenuation = 1;  // will regulate the filter parameters: the greater the value, more sensible to the accelerometer raw inputs
+int sensitivity = 1;  // counts/quid - ?
+int tolerance = 10;   // for the sensitivity changes 10/1000 = 1%
+int sampleDelay = 50; // use 10 ms for a 100 samples/sec (just like a mouse)
+                      // or 50 ms to allow some debounce in the input buttons
 
 unsigned long timer;
 
@@ -93,7 +94,7 @@ void setup() {
   // initialize device parameters and control variables:
   sensitivity = 1; //empirical
   attenuation = 1; //empirical
-  active = false; oldActive = true; //this will force calibration on the first loop
+  active = false; wasActive = false;
   Serial.println(); //"clean up" serial port
   calibrate();
   
@@ -124,20 +125,22 @@ void loop() {
   yValue = compass.a.x; //pitch move
   zValue = compass.m.x; //nod/yaw move
   
-  //Buttons detection and control:
+  //Buttons detection and activation/deactivation control:
   btn1 = !digitalRead(btnPin1);
   btn2 = !digitalRead(btnPin2);
   btn3 = !digitalRead(btnPin3);
   btn4 = !digitalRead(btnPin4);
   //btnPressed = (btn1==LOW)||(btn2==LOW)||(btn3==LOW)||(btn4==LOW);
-  btnPressed = (btn1||btn2||btn3||btn4);
-  if (btnPressed!=oldBtnPressed){
-    if (oldBtnPressed) {
-      if (!active) activate();
-      else deactivate();
-    }
+  //btnPressed = (btn1||btn2||btn3||btn4);
+  btnsPressed = btn1 + btn2 + btn3 + btn4;
+  if (btnsPressed!=oldBtnsPressed){
+      if (!wasActive) { //has not been deactivated recently
+        if (!active&&btnsPressed==0) activate(); //will activate when all buttons are released
+      }
+      else if (btnsPressed==0) wasActive = false; //this will reset the "deactivated recently" control when all buttons are released after a deactivation
+      if (active&&btnsPressed>=2) deactivate(); //will deactivate whenever two (or more) buttons are pressed at the same time
   }
-  oldBtnPressed = btnPressed;
+  oldBtnsPressed = btnsPressed;
   
   //Calculates sensor values changes:
   xDelta = round((xValue - xRef)/attenuation);
@@ -161,8 +164,8 @@ void loop() {
   //Control the alerts
   showAlerts();
   
-  oldActive = active;
-  delay(10); // 100 samples/sec, just like a mouse
+  //Loop speed according to sample rate
+  delay(sampleDelay);
 }
 
 void calibrate() {
@@ -174,9 +177,6 @@ void calibrate() {
   //Average value from the 10 last consucutive sensor reads:
   for (i=0;i<10;i++) {
     compass.read();
-    //x += analogRead(xAxisPin);
-    //y += analogRead(yAxisPin);
-    //z += analogRead(zAxisPin);
     x += compass.a.y;
     y += compass.a.x;
     z += compass.m.x;
@@ -265,10 +265,10 @@ void beep2 (int frequencyInHertz, long timeInMilliseconds)     // the sound prod
 
 void activate() {
           color(0,255,0);
-          //digitalWrite(viberPin,HIGH);
           delay(200);
           vibe(200);
           active = true;
+          wasActive = true;
           // "Ta da" sound:
           beep(2349,100);	//D
           beep(4186,200);	//C
@@ -294,9 +294,9 @@ void activate() {
 void deactivate() {
           color(255,0,0);
           delay(200);
-          //digitalWrite(viberPin,HIGH);
           vibe(200);
           active = false;
+          wasActive = true;
           // "Da ta" sound:
           beep(4186,100);	//C
           beep(1043,100);	//G
