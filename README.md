@@ -61,23 +61,23 @@ In a very quick and simplified way, everything should be connected like this:
 
 5) Connect the Bluetooth to Serial Port Module (of course, it will depend on the board you choose to use):
 	 
-		           Arduino      Tato's Bluetooth board
-		           -----------------------------------
-		                5V  ->  VCC
-		               GND  ->  GND
-		Digital pin 0 (Rx)  ->  Tx
-		Digital pin 1 (Tx)  ->  Rx
+		Arduino      Tato's Bluetooth board
+		-----------------------------------
+		     5V  ->  VCC
+		    GND  ->  GND
+		 0 (Rx)  ->  Tx
+		 1 (Tx)  ->  Rx
 	 
 6) Connect the 3.5mm female audio jacks for the input buttons to the Arduino digital input pins:
 
-		      Arduino      Female jack 
-		      ------------------------
-		Digital pin 2  ->  the tip of the audio jack for button 1
-		Digital pin 3  ->  the tip of the audio jack for button 2
-		Digital pin 4  ->  the tip of the audio jack for button 3
-		Digital pin 5  ->  the tip of the audio jack for button 4
-		          GND  ->  the sleeve of all other tips of all the above jacks
-		           5V  ->  the middle ring of the above jacks
+		Arduino      Female jack 
+		------------------------
+		      2  ->  the tip of the audio jack for button 1
+		      3  ->  the tip of the audio jack for button 2
+		      4  ->  the tip of the audio jack for button 3
+		      5  ->  the tip of the audio jack for button 4
+		    GND  ->  the sleeve of all other tips of all the above jacks
+		     5V  ->  the middle ring of the above jacks
 	 
 7) External buttons:
 
@@ -96,6 +96,55 @@ Installation
 
 Download the archive from GitHub, decompress it, and use it :)
 Make sure you have all the libraries above correctly installed in your Arduino development environment.
+
+Output
+------
+
+Detectable movements will be:
+- Roll (bend head left-right): from accelerometer y-axis
+- Pitch (bend head forwards-backwards): from accelerometer x-axis
+- Nod / yaw (turn head left-right: from compass x-axis
+
+When activated, the device will send through Bluetooth an output containing:
+
+- "*" --> stands for comment lines, for example, the device will print that immediately after activation:
+
+		*** Sensitivity is: 100
+		*** Filter parameters are: 0.09800,91.00000,0.00000 - 0.09800,91.00000,0.00000 - 0.09800,91.00000,0.00000
+		*** Reference values are: -1419,2729,-30
+		                                 |__ stands for the initial sensor values that will be used as reference values when detecting relative moves: Nod, Pitch, Roll respectively
+
+- a 7-tuple comma separated string like this:
+
+		0,0,0,0,0,0,0
+		| | | | | | |__ Button 4 state: 1 pressed, 0 released
+		| | | | | |____ Button 3 state: 1 pressed, 0 released
+		| | | | |______ Button 2 state: 1 pressed, 0 released
+		| | | |________ Button 1 state: 1 pressed, 0 released
+		| | |__________ Nod move (relative to reference value): left + <-- 0 --> - right
+		| |____________ Pitch move (relative to reference value): backwards (up) - <-- 0 --> + front (down)
+		|______________ Roll move (relative to reference value): left + <-- 0 --> - right
+
+Example:
+
+		*** Reference values are: -1387,2782,-25
+		*** Sensitivity is: 100
+		*** Filter parameters are: 0.09800,91.00000,0.00000 - 0.09800,91.00000,0.00000 - 0.09800,91.00000,0.00000
+		*** Reference values are: -1419,2729,-30
+		0,0,0,0,0,0,0
+		0,0,0,0,0,0,0
+		0,1,0,0,0,0,0
+		0,0,0,0,0,0,0
+		-1,0,0,0,0,0,0
+		0,1,0,0,0,0,0
+		-1,1,0,0,0,0,0
+		-1,3,0,0,0,0,0
+		1,3,1,0,0,0,0
+		-2,3,1,0,0,0,0
+		-3,6,1,0,0,0,0
+		-1,7,1,0,0,0,0
+
+
 
 Other information
 -----------------
