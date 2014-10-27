@@ -5,6 +5,8 @@ An electronic cap based on the LilyPad Arduino for detecting and transmitting he
 
 aCap was originally developed to be used as an assistive technology device for people with severe physical disabilities, like tetraplegia.
 
+![aCap](http://nutap.les.inf.puc-rio.br/wp-content/uploads/2014/09/Featured-image.png)
+
 Hardware
 --------
 
